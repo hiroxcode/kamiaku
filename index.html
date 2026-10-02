@@ -144,6 +144,35 @@ textarea{
   </section>
 
   <section>
+  <h2>移動・行動宣言</h2>
+
+  <label class="field-label" for="destination">行き先</label>
+  <input id="destination" type="text" placeholder="例：図書室">
+
+  <p class="note">
+    「成功」を選択しているHO番号を使用します。
+  </p>
+
+  <div class="actions">
+    <button class="primary" type="button" id="moveDestination">
+      行き先へ向かう
+    </button>
+
+    <button class="secondary" type="button" id="searchBoard">
+      案内板を探す
+    </button>
+
+    <button class="secondary" type="button" id="randomMove">
+      ランダムに移動
+    </button>
+
+    <button class="secondary" type="button" id="hoOnly">
+      HO番号のみ
+    </button>
+  </div>
+</section>
+  
+  <section>
     <h2>出力</h2>
     <div class="output-row">
       <textarea id="output" placeholder="ここに結果が表示されます"></textarea><br>
@@ -264,16 +293,27 @@ document.getElementById("generate").addEventListener("click",()=>{
     alert("成功または失敗のキャラクターを選択してください。");
     return;
   }
-  if(!skill){
-    alert("技能を選択または入力してください。");
-    return;
-  }
 
-  const actionText = place ? `${place}への「${skill}」` : `「${skill}」`;
+let actionText = "";
+
+if(skill){
+  actionText = place ? `${place}への「${skill}」` : `「${skill}」`;
+}
 
   const lines=[];
+if(skill){
   if(successes.length) lines.push(`【${successes.join("・")}】${actionText}成功`);
   if(failures.length) lines.push(`【${failures.join("・")}】${actionText}失敗`);
+}else{
+  const selected = [...successes, ...failures].sort((a,b) => {
+    return Number(a.replace("HO","")) - Number(b.replace("HO",""));
+  });
+
+  if(selected.length) lines.push(`【${selected.join("・")}】`);
+}
+
+  if(selected.length) lines.push(`【${selected.join("・")}】`);
+}
 
   document.getElementById("output").value=lines.join("\n");
   document.getElementById("copyStatus").textContent="";
@@ -300,6 +340,75 @@ document.getElementById("reset").addEventListener("click",()=>{
   document.getElementById("output").value="";
   document.getElementById("copyStatus").textContent="";
 });
+
+  // 「成功」を選択しているHO番号を取得
+function getSelectedHOs(){
+  const selected = [];
+
+  characters.forEach((c,i)=>{
+    if(states[i] === "success"){
+      selected.push(c.ho);
+    }
+  });
+
+  return selected;
+}
+
+// HO番号を【HO1・HO2・HO3】形式にする
+function getHOText(){
+  const selected = getSelectedHOs();
+
+  if(!selected.length){
+    alert("キャラクターを「成功」で選択してください。");
+    return null;
+  }
+
+  return `【${selected.join("・")}】`;
+}
+
+// 行き先へ向かう
+document.getElementById("moveDestination").addEventListener("click",()=>{
+  const hoText = getHOText();
+  if(!hoText) return;
+
+  const destination = document.getElementById("destination").value.trim();
+
+  if(!destination){
+    alert("行き先を入力してください。");
+    return;
+  }
+
+  document.getElementById("output").value =
+    `${hoText}は「行き先(${destination})」へ向かいました。`;
+});
+
+// 案内板を探す
+document.getElementById("searchBoard").addEventListener("click",()=>{
+  const hoText = getHOText();
+  if(!hoText) return;
+
+  document.getElementById("output").value =
+    `${hoText}は案内板を探します。`;
+});
+
+
+// ランダムに移動
+document.getElementById("randomMove").addEventListener("click",()=>{
+  const hoText = getHOText();
+  if(!hoText) return;
+
+  document.getElementById("output").value =
+    `${hoText}はランダムに移動中です。`;
+});
+
+// HO番号だけ
+document.getElementById("hoOnly").addEventListener("click",()=>{
+  const hoText = getHOText();
+  if(!hoText) return;
+
+  document.getElementById("output").value = hoText;
+});
+  
 </script>
 </body>
 </html>
