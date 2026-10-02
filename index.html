@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>【かみあく】入力補助ツール</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#222; --muted:#737985; --line:#dcdfe5;
+  --accent:#353b46; --success-bg:#e9f4fc; --success:#26a2db;
+  --failure-bg:#fdecec; --failure:#d33a3a;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",
+  "Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  font-size:14px;line-height:1.45;
+}
+main{max-width:900px;margin:18px auto;padding:0 12px 24px}
+h1{font-size:1.25rem;margin:0 0 3px}
+.lead{font-size:.82rem;color:var(--muted);margin:0 0 12px}
+section{
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:13px 14px;margin-bottom:10px;
+}
+h2{font-size:.94rem;margin:0 0 9px}
+
+/* 12人を 3列 × 4行 */
+.character-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px 10px;
+}
+.character{
+  display:grid;
+  grid-template-columns:40px minmax(40px,1fr) auto auto;
+  align-items:center;gap:5px;
+  border:1px solid #e6e8ec;border-radius:7px;
+  padding:6px 7px;min-width:0;
+}
+.ho{font-weight:700;font-size:.82rem}
+.name{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:.82rem; cursor:pointer; border-radius:4px; padding:2px 3px;
+}
+.name:hover{background:#eef0f3}
+.name:focus{outline:2px solid #9ca3af;outline-offset:1px}
+button,input,textarea{font:inherit}
+.judge{
+  border:1px solid var(--line);background:#fff;border-radius:6px;
+  padding:4px 7px;cursor:pointer;font-size:.78rem;line-height:1.2;
+}
+.judge:hover{background:#f1f2f4}
+.judge.success.active{
+  background:var(--success-bg);border-color:var(--success);color:#26a2db;font-weight:700;
+}
+.judge.failure.active{
+  background:var(--failure-bg);border-color:var(--failure);color:#d33a3a;font-weight:700;
+}
+
+.input-grid{
+  display:grid;grid-template-columns:minmax(180px,1fr) 1.6fr;
+  gap:14px;align-items:start;
+}
+.field-label{display:block;font-weight:700;font-size:.85rem;margin-bottom:5px}
+input[type="text"]{
+  width:100%;border:1px solid var(--line);border-radius:7px;
+  padding:7px 9px;background:#fff;
+}
+.note{color:var(--muted);font-size:.75rem;margin:4px 0 0}
+.skill-buttons{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+.skill{
+  border:1px solid var(--line);background:#fff;border-radius:999px;
+  padding:4px 10px;cursor:pointer;font-size:.8rem;
+}
+.skill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.primary,.secondary{
+  border:0;border-radius:7px;padding:7px 13px;cursor:pointer;font-weight:700;font-size:.82rem;
+}
+.primary{background:var(--accent);color:#fff}
+.secondary{background:#e9ebef;color:#222}
+.output-row{
+  display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;
+}
+textarea{
+  width:100%;min-height:68px;resize:vertical;border:1px solid var(--line);
+  border-radius:7px;padding:8px 10px;background:#fafafa;line-height:1.5;
+}
+.copy-status{font-size:.76rem;color:var(--muted);min-height:1.2em;margin-top:4px}
+
+@media(max-width:760px){
+  .character-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .input-grid{grid-template-columns:1fr}
+}
+@media(max-width:500px){
+  main{margin-top:10px;padding:0 8px 16px}
+  section{padding:10px}
+  .character-list{grid-template-columns:1fr}
+  .character{grid-template-columns:42px 1fr auto auto}
+  .output-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>かみあく 入力補助ツール</h1>
+  <!-- <p class="lead"></p> -->
+
+  <section>
+    <h2>キャラクター／判定結果</h2>
+    <p class="note" style="margin:-4px 0 8px">成功／失敗を選択したキャラクターのみ、判定結果をHO番号でまとめて出力します。<br>
+      また、キャラクター名をクリックすると「名前(HO番号)」の形式でコピーできます。</p>
+    <div class="character-list" id="characterList"></div>
+  </section>
+
+  <section>
+    <div class="input-grid">
+      <div>
+        <label class="field-label" for="place">探索箇所（任意）</label>
+        <input id="place" type="text" placeholder="例：扉">
+        <p class="note">※空欄の場合は探索箇所を省略して出力します。</p>
+      </div>
+
+      <div>
+        <span class="field-label">技能</span>
+        <div class="skill-buttons">
+          <button class="skill" type="button" data-skill="目星">目星</button>
+          <button class="skill" type="button" data-skill="聞き耳">聞き耳</button>
+          <button class="skill" type="button" data-skill="図書館">図書館</button>
+          <button class="skill" type="button" data-skill="アイデア">アイデア</button>
+          <button class="skill" type="button" data-skill="知識">知識</button>
+          <button class="skill" type="button" data-skill="コンピュータ">コンピュータ</button>
+        </div>
+        <input id="customSkill" type="text" placeholder="その他の技能">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" type="button" id="generate">テキストを作成</button>
+      <button class="secondary" type="button" id="reset">リセット</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>出力</h2>
+    <div class="output-row">
+      <textarea id="output" readonly placeholder="ここに結果が表示されます"></textarea><br>
+      <button class="primary" type="button" id="copy">テキストをコピー</button>
+    </div>
+    <div class="copy-status" id="copyStatus"></div>
+  </section>
+</main>
+
+<script>
+const characters = [
+  { ho:"HO1",  name:"スプリング", emoji:"🐐🍞" },
+  { ho:"HO2",  name:"CN きょむきょむぷりん", emoji:"🦙👗" },
+  { ho:"HO3",  name:"烟霧", emoji:"🐌🚬" },
+  { ho:"HO4",  name:"伽藍 メイル", emoji:"🦝🔮" },
+  { ho:"HO5",  name:"セオドア・ウィートリー", emoji:"🦡👓" },
+  { ho:"HO6",  name:"ヤマ", emoji:"🐃🍰" },
+  { ho:"HO7",  name:"胡蝶 侘助", emoji:"🦉🥩" },
+  { ho:"HO8",  name:"ホープ・ウェールズ", emoji:"🦎🪔" },
+  { ho:"HO9",  name:"竪琴 統", emoji:"🦭🥾" },
+  { ho:"HO10", name:"二岡 都豆", emoji:"🦥📘" },
+  { ho:"HO11", name:"鴉馬", emoji:"👺🌂" },
+  { ho:"HO12", name:"醒井 一覚", emoji:"🦄🛏️" }
+];
+
+const states = Array(characters.length).fill(null);
+const list = document.getElementById("characterList");
+
+characters.forEach((c,i)=>{
+  const row=document.createElement("div");
+  row.className="character";
+  row.innerHTML=`
+    <span class="ho">${c.ho}</span>
+    <span class="name" title="クリックで「${c.name}(${c.ho})」をコピー" tabindex="0" role="button" data-index="${i}">${c.emoji} ${c.name}</span>
+    <button type="button" class="judge success" data-index="${i}" data-state="success">成功</button>
+    <button type="button" class="judge failure" data-index="${i}" data-state="failure">失敗</button>`;
+  list.appendChild(row);
+});
+
+
+// キャラクター名をクリックすると「名前（HO番号）」をコピー
+async function copyCharacter(index){
+  const c = characters[index];
+  const text = `${c.name}(${c.ho})`;
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch{
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    temp.style.position = "fixed";
+    temp.style.opacity = "0";
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    temp.remove();
+  }
+
+  const nameEl = document.querySelector(`.name[data-index="${index}"]`);
+  const original = nameEl.textContent;
+  nameEl.textContent = "コピー完了！";
+  setTimeout(()=>{ nameEl.textContent = original; }, 700);
+}
+
+document.querySelectorAll(".name").forEach(nameEl=>{
+  nameEl.addEventListener("click",()=>{
+    copyCharacter(Number(nameEl.dataset.index));
+  });
+  nameEl.addEventListener("keydown",e=>{
+    if(e.key==="Enter" || e.key===" "){
+      e.preventDefault();
+      copyCharacter(Number(nameEl.dataset.index));
+    }
+  });
+});
+
+document.querySelectorAll(".judge").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const i=Number(btn.dataset.index);
+    const state=btn.dataset.state;
+    states[i]=states[i]===state ? null : state;
+    document.querySelectorAll(`.judge[data-index="${i}"]`).forEach(b=>{
+      b.classList.toggle("active",b.dataset.state===states[i]);
+    });
+  });
+});
+
+let selectedSkill="";
+document.querySelectorAll(".skill").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const skill=btn.dataset.skill;
+    selectedSkill=selectedSkill===skill ? "" : skill;
+    document.querySelectorAll(".skill").forEach(b=>{
+      b.classList.toggle("active",b.dataset.skill===selectedSkill);
+    });
+    if(selectedSkill) document.getElementById("customSkill").value="";
+  });
+});
+
+document.getElementById("customSkill").addEventListener("input",e=>{
+  if(e.target.value.trim()){
+    selectedSkill="";
+    document.querySelectorAll(".skill").forEach(b=>b.classList.remove("active"));
+  }
+});
+
+document.getElementById("generate").addEventListener("click",()=>{
+  const place=document.getElementById("place").value.trim();
+  const customSkill=document.getElementById("customSkill").value.trim();
+  const skill=customSkill || selectedSkill;
+
+  const successes=[],failures=[];
+  characters.forEach((c,i)=>{
+    if(states[i]==="success") successes.push(c.ho);
+    if(states[i]==="failure") failures.push(c.ho);
+  });
+
+  if(!successes.length && !failures.length){
+    alert("成功または失敗のキャラクターを選択してください。");
+    return;
+  }
+  if(!skill){
+    alert("技能を選択または入力してください。");
+    return;
+  }
+
+  const actionText = place ? `${place}への「${skill}」` : `「${skill}」`;
+
+  const lines=[];
+  if(successes.length) lines.push(`【${successes.join("・")}】${actionText}成功`);
+  if(failures.length) lines.push(`【${failures.join("・")}】${actionText}失敗`);
+
+  document.getElementById("output").value=lines.join("\n");
+  document.getElementById("copyStatus").textContent="";
+});
+
+document.getElementById("copy").addEventListener("click",async()=>{
+  const output=document.getElementById("output");
+  if(!output.value)return;
+  try{
+    await navigator.clipboard.writeText(output.value);
+  }catch{
+    output.select();
+    document.execCommand("copy");
+  }
+  document.getElementById("copyStatus").textContent="コピーしました。";
+});
+
+document.getElementById("reset").addEventListener("click",()=>{
+  states.fill(null);
+  selectedSkill="";
+  document.querySelectorAll(".judge,.skill").forEach(b=>b.classList.remove("active"));
+  document.getElementById("place").value="";
+  document.getElementById("customSkill").value="";
+  document.getElementById("output").value="";
+  document.getElementById("copyStatus").textContent="";
+});
+</script>
+</body>
+</html>
