@@ -138,20 +138,22 @@ textarea{
     </div>
 
     <div class="actions">
-      <button class="primary" type="button" id="generate">テキストを作成</button>
+      <button class="primary" type="button" id="generate">判定結果テキストを作成</button>
       <button class="secondary" type="button" id="reset">リセット</button>
     </div>
   </section>
 
   <section>
     <h2>移動先の宣言</h2>
-    <p class="note" style="margin:-4px 0 8px">「成功」を選択したキャラクターのHO番号で、移動宣言／行き先の宣言を出力します。（x.○○○の部分のみ入れてください）</p>
+    <p class="note" style="margin:-4px 0 8px">「成功」を選択したキャラクターのHO番号で、移動先の宣言を出力します。（「x.○○○」または「1d22の結果の数字」を入れてください）</p>
     <label class="field-label" for="destination">行き先</label>
     <input id="destination" type="text" placeholder="例：x.場所名">
-    <div class="actions">
-      <button class="primary" type="button" id="moveDestination">「行き先」へ向かう</button>
-      <button class="secondary" type="button" id="searchBoard">案内板を探す(ナビゲート)</button>
-      <button class="secondary" type="button" id="randomMove">ランダムに移動</button>
+ <div class="actions">
+  <button class="primary" type="button" id="moveDestination">行き先へ向かう</button>
+  <button class="secondary" type="button" id="searchBoard">案内板を探す</button>
+  <button class="secondary" type="button" id="randomMove">ランダムに移動</button>
+  <button class="secondary" type="button" id="moveNumber">○番へ向かう（ナビゲート失敗）</button>
+</div>
     </div>
   </section>
 
@@ -352,6 +354,24 @@ document.getElementById("reset").addEventListener("click",()=>{
   document.getElementById("output").value="";
   document.getElementById("copyStatus").textContent="";
 });
+
+document.getElementById("moveNumber").addEventListener("click",()=>{
+  const hoText=getMovementHOText();
+  if(!hoText) return;
+
+  const number=document.getElementById("destination").value.trim();
+
+  if(!number){
+    alert("移動先の番号を入力してください。");
+    return;
+  }
+
+  document.getElementById("output").value=
+    `${hoText}は「${number}番」へ向かいました。`;
+
+  document.getElementById("copyStatus").textContent="";
+});
+
 </script>
 </body>
 </html>
