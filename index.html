@@ -144,6 +144,18 @@ textarea{
   </section>
 
   <section>
+    <h2>移動先の宣言</h2>
+    <p class="note" style="margin:-4px 0 8px">「成功」を選択したキャラクターのHO番号で、移動宣言／行き先の宣言を出力します。（x.○○○の部分のみ入れてください）</p>
+    <label class="field-label" for="destination">行き先</label>
+    <input id="destination" type="text" placeholder="例：x.場所名">
+    <div class="actions">
+      <button class="primary" type="button" id="moveDestination">「行き先」へ向かう</button>
+      <button class="secondary" type="button" id="searchBoard">案内板を探す(ナビゲート)</button>
+      <button class="secondary" type="button" id="randomMove">ランダムに移動</button>
+    </div>
+  </section>
+
+  <section>
     <h2>出力</h2>
     <div class="output-row">
       <textarea id="output" placeholder="ここに結果が表示されます"></textarea><br>
@@ -279,6 +291,45 @@ document.getElementById("generate").addEventListener("click",()=>{
   document.getElementById("copyStatus").textContent="";
 });
 
+// 移動・行動宣言では「成功」を選択しているHO番号だけを使用
+function getMovementHOText(){
+  const selected=[];
+  characters.forEach((c,i)=>{
+    if(states[i]==="success") selected.push(c.ho);
+  });
+  if(!selected.length){
+    alert("移動・行動宣言に使用するキャラクターを「成功」で選択してください。");
+    return null;
+  }
+  return `【${selected.join("・")}】`;
+}
+
+document.getElementById("moveDestination").addEventListener("click",()=>{
+  const hoText=getMovementHOText();
+  if(!hoText) return;
+  const destination=document.getElementById("destination").value.trim();
+  if(!destination){
+    alert("行き先を入力してください。");
+    return;
+  }
+  document.getElementById("output").value=`${hoText}は「行き先(${destination})」へ向かいました。`;
+  document.getElementById("copyStatus").textContent="";
+});
+
+document.getElementById("searchBoard").addEventListener("click",()=>{
+  const hoText=getMovementHOText();
+  if(!hoText) return;
+  document.getElementById("output").value=`${hoText}は案内板を探します。`;
+  document.getElementById("copyStatus").textContent="";
+});
+
+document.getElementById("randomMove").addEventListener("click",()=>{
+  const hoText=getMovementHOText();
+  if(!hoText) return;
+  document.getElementById("output").value=`${hoText}はランダムに移動中です。`;
+  document.getElementById("copyStatus").textContent="";
+});
+
 document.getElementById("copy").addEventListener("click",async()=>{
   const output=document.getElementById("output");
   if(!output.value)return;
@@ -297,6 +348,7 @@ document.getElementById("reset").addEventListener("click",()=>{
   document.querySelectorAll(".judge,.skill").forEach(b=>b.classList.remove("active"));
   document.getElementById("place").value="";
   document.getElementById("customSkill").value="";
+  document.getElementById("destination").value="";
   document.getElementById("output").value="";
   document.getElementById("copyStatus").textContent="";
 });
