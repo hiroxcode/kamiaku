@@ -203,7 +203,7 @@ async function copyCharacter(index){
 
   const nameEl = document.querySelector(`.name[data-index="${index}"]`);
   const original = nameEl.textContent;
-  nameEl.textContent = "コピー完了！";
+  nameEl.textContent = "コピーしました。";
   setTimeout(()=>{ nameEl.textContent = original; }, 700);
 }
 
