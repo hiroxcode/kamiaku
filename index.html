@@ -284,10 +284,43 @@ document.getElementById("generate").addEventListener("click",()=>{
   const skill=customSkill || selectedSkill;
 
   const successes=[],failures=[];
+
   characters.forEach((c,i)=>{
     if(states[i]==="success") successes.push(c.ho);
     if(states[i]==="failure") failures.push(c.ho);
   });
+
+  if(!successes.length && !failures.length){
+    alert("成功または失敗のキャラクターを選択してください。");
+    return;
+  }
+
+  const lines=[];
+
+  if(skill){
+    const actionText = place
+      ? `${place}への「${skill}」`
+      : `「${skill}」`;
+
+    if(successes.length){
+      lines.push(`【${successes.join("・")}】${actionText}成功`);
+    }
+
+    if(failures.length){
+      lines.push(`【${failures.join("・")}】${actionText}失敗`);
+    }
+
+  }else{
+    const selected=[...successes,...failures].sort((a,b)=>{
+      return Number(a.replace("HO","")) - Number(b.replace("HO",""));
+    });
+
+    lines.push(`【${selected.join("・")}】`);
+  }
+
+  document.getElementById("output").value=lines.join("\n");
+  document.getElementById("copyStatus").textContent="";
+});
 
   if(!successes.length && !failures.length){
     alert("成功または失敗のキャラクターを選択してください。");
