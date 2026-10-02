@@ -110,7 +110,7 @@ textarea{
 
   <section>
     <h2>キャラクター／判定結果</h2>
-    <p class="note" style="margin:-4px 0 8px">成功／失敗を選択したキャラクターのみ、判定結果をHO番号でまとめて出力します。<br>
+    <p class="note" style="margin:-4px 0 8px">成功／失敗を選択したキャラクターのみ、判定結果や移動先の宣言をHO番号でまとめて出力します。<br>
       また、キャラクター名をクリックすると「名前(HO番号)」の形式でコピーできます。</p>
     <div class="character-list" id="characterList"></div>
   </section>
@@ -143,8 +143,11 @@ textarea{
     </div>
   </section>
 
-  <section>
-    <h2>移動先の宣言</h2>
+<section>
+  <details>
+    <summary><strong>移動先の宣言（クリックで開閉）</strong></summary>
+
+    <div style="margin-top:10px;">
     <p class="note" style="margin:-4px 0 8px">「成功」を選択したキャラクターのHO番号で、移動先の宣言を出力します。（「x.○○○」または「1d22の結果の数字」を入れてください）</p>
     <label class="field-label" for="destination">行き先</label>
     <input id="destination" type="text" placeholder="例：x.場所名">
