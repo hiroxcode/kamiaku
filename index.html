@@ -313,12 +313,13 @@ function getMovementHOText(){
 document.getElementById("moveDestination").addEventListener("click",()=>{
   const hoText=getMovementHOText();
   if(!hoText) return;
-  const destination=document.getElementById("destination").value.trim();
-  if(!destination){
-    alert("行き先を入力してください。");
-    return;
-  }
-  document.getElementById("output").value=`${hoText}は「行き先(${destination})」へ向かいました。`;
+
+  const destination=
+    document.getElementById("destination").value.trim() || "x.○○○";
+
+  document.getElementById("output").value=
+    `${hoText}は「行き先(${destination})」へ向かいました。`;
+
   document.getElementById("copyStatus").textContent="";
 });
 
@@ -363,12 +364,8 @@ document.getElementById("moveNumber").addEventListener("click",()=>{
   const hoText=getMovementHOText();
   if(!hoText) return;
 
-  const number=document.getElementById("destination").value.trim();
-
-  if(!number){
-    alert("移動先の番号を入力してください。");
-    return;
-  }
+  const number=
+  document.getElementById("destination").value.trim() || "x";
 
   document.getElementById("output").value=
     `${hoText}は「${number}番」へ向かいました。`;
